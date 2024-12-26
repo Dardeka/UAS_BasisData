@@ -1,14 +1,10 @@
 <?php
-session_start();
+require 'DatabaseHelper.php';
 
-// Inisialisasi data UKT jika belum ada
-if (!isset($_SESSION['uktData'])) {
-    $_SESSION['uktData'] = [];
-}
+$db = new DatabaseHelper();
 
 // Fungsi untuk menghitung median
-function calculateMedian($data)
-{
+function calculateMedian($data) {
     $count = count($data);
     if ($count === 0) return 0;
 
@@ -23,8 +19,7 @@ function calculateMedian($data)
 }
 
 // Fungsi untuk menghitung statistik 5 serangkai
-function getStatistics($data)
-{
+function getStatistics($data) {
     if (empty($data)) return null;
 
     sort($data);
@@ -44,8 +39,7 @@ function getStatistics($data)
 }
 
 // Fungsi untuk menghitung pencilan
-function getOutliers($data)
-{
+function getOutliers($data) {
     if (empty($data)) return null;
 
     $stats = getStatistics($data);
@@ -53,7 +47,7 @@ function getOutliers($data)
     $lowerBound = $stats['Q1 (Kuartil 1)'] - 1.5 * $iqr;
     $upperBound = $stats['Q3 (Kuartil 3)'] + 1.5 * $iqr;
 
-    $outliers = array_filter($data, function ($value) use ($lowerBound, $upperBound) {
+    $outliers = array_filter($data, function($value) use ($lowerBound, $upperBound) {
         return $value < $lowerBound || $value > $upperBound;
     });
 
@@ -65,39 +59,31 @@ function getOutliers($data)
 }
 
 // Fungsi untuk menghitung standar deviasi
-function getStandardDeviation($data)
-{
+function getStandardDeviation($data) {
     if (empty($data)) return 0;
 
     $mean = array_sum($data) / count($data);
-    $variance = array_sum(array_map(function ($value) use ($mean) {
+    $variance = array_sum(array_map(function($value) use ($mean) {
         return pow($value - $mean, 2);
     }, $data)) / count($data);
 
     return sqrt($variance);
 }
 
-// Menambahkan data baru
+// Tambahkan data ke database
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nama'], $_POST['nim'], $_POST['alamat'], $_POST['prodi'], $_POST['ukt'])) {
-    $nama = $_POST['nama'];
-    $nim = $_POST['nim'];
-    $alamat = $_POST['alamat'];
-    $prodi = $_POST['prodi'];
-    $ukt = floatval($_POST['ukt']);
-
-    $_SESSION['uktData'][] = [
-        'nama' => $nama,
-        'nim' => $nim,
-        'alamat' => $alamat,
-        'prodi' => $prodi,
-        'ukt' => $ukt,
-    ];
+    $sql = "INSERT INTO mahasiswa (nama, nim, alamat, prodi, ukt) VALUES (?, ?, ?, ?, ?)";
+    $db->execute($sql, [$_POST['nama'], $_POST['nim'], $_POST['alamat'], $_POST['prodi'], $_POST['ukt']]);
 }
 
-// Ambil data UKT untuk operasi statistik
-$uktValues = array_column($_SESSION['uktData'], 'ukt');
+// Ambil data UKT
+$result = $db->query("SELECT ukt FROM mahasiswa");
+$uktValues = [];
+while ($row = $result->fetch_assoc()) {
+    $uktValues[] = $row['ukt'];
+}
 
-// Variabel untuk menampilkan hasil berdasarkan tombol
+// Variabel untuk hasil statistik
 $statisticsResult = null;
 if (isset($_POST['action'])) {
     if ($_POST['action'] === 'statistics') {
@@ -118,21 +104,14 @@ if (isset($_POST['action'])) {
 <head>
     <title>Data UKT Mahasiswa</title>
     <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-    }
-
     table {
         border-collapse: collapse;
         width: 100%;
-        margin-bottom: 20px;
     }
 
     td,
     th {
-        border: 1px solid #dddddd;
-        text-align: left;
+        border: 1px solid #ddd;
         padding: 8px;
     }
 
@@ -140,11 +119,9 @@ if (isset($_POST['action'])) {
         background-color: #f2f2f2;
     }
 
-    input,
-    button {
-        padding: 10px;
+    button,
+    input {
         margin: 5px 0;
-        width: 100%;
     }
     </style>
 </head>
@@ -152,28 +129,20 @@ if (isset($_POST['action'])) {
 <body>
 
     <h2>Data UKT Mahasiswa</h2>
-
-    <!-- Form untuk memasukkan data -->
     <form method="POST">
-        <label for="nama">Nama:</label>
-        <input type="text" id="nama" name="nama" required>
-
-        <label for="nim">NIM:</label>
-        <input type="text" id="nim" name="nim" required>
-
-        <label for="alamat">Alamat:</label>
-        <input type="text" id="alamat" name="alamat" required>
-
-        <label for="prodi">Prodi:</label>
-        <input type="text" id="prodi" name="prodi" required>
-
-        <label for="ukt">UKT:</label>
-        <input type="number" id="ukt" name="ukt" required>
-
+        <label>Nama:</label><br>
+        <input type="text" name="nama" required><br>
+        <label>NIM:</label><br>
+        <input type="text" name="nim" required><br>
+        <label>Alamat:</label><br>
+        <input type="text" name="alamat" required><br>
+        <label>Prodi:</label><br>
+        <input type="text" name="prodi" required><br>
+        <label>UKT:</label><br>
+        <input type="number" name="ukt" step="0.01" required><br>
         <button type="submit">Tambah Data</button>
     </form>
 
-    <!-- Tabel Data UKT -->
     <table>
         <thead>
             <tr>
@@ -185,19 +154,20 @@ if (isset($_POST['action'])) {
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($_SESSION['uktData'] as $data): ?>
+            <?php
+        $result = $db->query("SELECT * FROM mahasiswa");
+        while ($row = $result->fetch_assoc()): ?>
             <tr>
-                <td><?= htmlspecialchars($data['nama']) ?></td>
-                <td><?= htmlspecialchars($data['nim']) ?></td>
-                <td><?= htmlspecialchars($data['alamat']) ?></td>
-                <td><?= htmlspecialchars($data['prodi']) ?></td>
-                <td><?= number_format($data['ukt'], 0, ',', '.') ?></td>
+                <td><?= htmlspecialchars($row['nama']) ?></td>
+                <td><?= htmlspecialchars($row['nim']) ?></td>
+                <td><?= htmlspecialchars($row['alamat']) ?></td>
+                <td><?= htmlspecialchars($row['prodi']) ?></td>
+                <td><?= number_format($row['ukt'], 0, ',', '.') ?></td>
             </tr>
-            <?php endforeach; ?>
+            <?php endwhile; ?>
         </tbody>
     </table>
 
-    <!-- Tombol Statistik -->
     <h3>Operasi Statistik</h3>
     <form method="POST">
         <button type="submit" name="action" value="statistics">Tampilkan Statistik 5 Serangkai</button>
@@ -205,7 +175,6 @@ if (isset($_POST['action'])) {
         <button type="submit" name="action" value="stdDev">Tampilkan Standar Deviasi</button>
     </form>
 
-    <!-- Hasil Statistik -->
     <h3>Hasil</h3>
     <?php if ($statisticsResult !== null): ?>
     <?php foreach ($statisticsResult as $key => $value): ?>
