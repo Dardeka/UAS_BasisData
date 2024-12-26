@@ -1,8 +1,8 @@
 <?php
 class DatabaseHelper {
     private $host = 'localhost';
-    private $username = 'root'; // Ubah jika berbeda
-    private $password = '';     // Ubah jika berbeda
+    private $username = 'root';
+    private $password = '';    
     private $database = 'ukt_mahasiswa';
     private $conn;
 
@@ -21,7 +21,7 @@ class DatabaseHelper {
     public function query($sql, $params = []) {
         $stmt = $this->conn->prepare($sql);
         if ($params) {
-            $types = str_repeat('s', count($params)); // Semua parameter dianggap string
+            $types = str_repeat('s', count($params));
             $stmt->bind_param($types, ...$params);
         }
         $stmt->execute();
