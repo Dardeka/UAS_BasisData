@@ -1,10 +1,12 @@
 <?php
 session_start();
 
+// Inisialisasi data UKT jika belum ada
 if (!isset($_SESSION['uktData'])) {
     $_SESSION['uktData'] = [];
 }
 
+// Fungsi untuk menghitung median
 function calculateMedian($data) {
     $count = count($data);
     if ($count === 0) return 0;
@@ -19,6 +21,7 @@ function calculateMedian($data) {
     }
 }
 
+// Fungsi untuk menghitung statistik 5 serangkai
 function getStatistics($data) {
     if (empty($data)) return null;
 
@@ -30,33 +33,35 @@ function getStatistics($data) {
     $q3 = calculateMedian(array_slice($data, ceil(count($data) / 2)));
 
     return [
-        'min' => $min,
-        'q1' => $q1,
-        'median' => $median,
-        'q3' => $q3,
-        'max' => $max,
+        'Min' => $min,
+        'Q1 (Kuartil 1)' => $q1,
+        'Median' => $median,
+        'Q3 (Kuartil 3)' => $q3,
+        'Max' => $max,
     ];
 }
 
+// Fungsi untuk menghitung pencilan
 function getOutliers($data) {
     if (empty($data)) return null;
 
     $stats = getStatistics($data);
-    $iqr = $stats['q3'] - $stats['q1'];
-    $lowerBound = $stats['q1'] - 1.5 * $iqr;
-    $upperBound = $stats['q3'] + 1.5 * $iqr;
+    $iqr = $stats['Q3 (Kuartil 3)'] - $stats['Q1 (Kuartil 1)'];
+    $lowerBound = $stats['Q1 (Kuartil 1)'] - 1.5 * $iqr;
+    $upperBound = $stats['Q3 (Kuartil 3)'] + 1.5 * $iqr;
 
     $outliers = array_filter($data, function($value) use ($lowerBound, $upperBound) {
         return $value < $lowerBound || $value > $upperBound;
     });
 
     return [
-        'lowerBound' => $lowerBound,
-        'upperBound' => $upperBound,
-        'outliers' => $outliers,
+        'Batas Bawah' => $lowerBound,
+        'Batas Atas' => $upperBound,
+        'Data Pencilan' => empty($outliers) ? 'Tidak ada pencilan' : implode(', ', $outliers),
     ];
 }
 
+// Fungsi untuk menghitung standar deviasi
 function getStandardDeviation($data) {
     if (empty($data)) return 0;
 
@@ -68,6 +73,7 @@ function getStandardDeviation($data) {
     return sqrt($variance);
 }
 
+// Menambahkan data baru
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nama'], $_POST['nim'], $_POST['alamat'], $_POST['prodi'], $_POST['ukt'])) {
     $nama = $_POST['nama'];
     $nim = $_POST['nim'];
@@ -84,7 +90,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nama'], $_POST['nim']
     ];
 }
 
+// Ambil data UKT untuk operasi statistik
 $uktValues = array_column($_SESSION['uktData'], 'ukt');
+
+// Variabel untuk menampilkan hasil berdasarkan tombol
+$statisticsResult = null;
+if (isset($_POST['action'])) {
+    if ($_POST['action'] === 'statistics') {
+        $statisticsResult = getStatistics($uktValues);
+    } elseif ($_POST['action'] === 'outliers') {
+        $statisticsResult = getOutliers($uktValues);
+    } elseif ($_POST['action'] === 'stdDev') {
+        $statisticsResult = [
+            'Standar Deviasi' => getStandardDeviation($uktValues),
+        ];
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -172,30 +193,23 @@ $uktValues = array_column($_SESSION['uktData'], 'ukt');
         </tbody>
     </table>
 
-    <!-- Statistik -->
-    <h3>Hasil Statistik</h3>
-    <?php if (!empty($uktValues)): ?>
-    <p>
-        <?php $stats = getStatistics($uktValues); ?>
-        <strong>Statistik 5 Serangkai:</strong><br>
-        Minimum: <?= $stats['min'] ?><br>
-        Q1: <?= $stats['q1'] ?><br>
-        Median: <?= $stats['median'] ?><br>
-        Q3: <?= $stats['q3'] ?><br>
-        Maximum: <?= $stats['max'] ?><br>
-    </p>
-    <p>
-        <?php $outliers = getOutliers($uktValues); ?>
-        <strong>Data Pencilan:</strong><br>
-        Batas Bawah: <?= $outliers['lowerBound'] ?><br>
-        Batas Atas: <?= $outliers['upperBound'] ?><br>
-        Data Pencilan: <?= implode(', ', $outliers['outliers']) ?: 'Tidak ada' ?><br>
-    </p>
-    <p>
-        <strong>Standar Deviasi:</strong> <?= number_format(getStandardDeviation($uktValues), 2, ',', '.') ?>
-    </p>
+    <!-- Tombol Statistik -->
+    <h3>Operasi Statistik</h3>
+    <form method="POST">
+        <button type="submit" name="action" value="statistics">Tampilkan Statistik 5 Serangkai</button>
+        <button type="submit" name="action" value="outliers">Tampilkan Data Pencilan</button>
+        <button type="submit" name="action" value="stdDev">Tampilkan Standar Deviasi</button>
+    </form>
+
+    <!-- Hasil Statistik -->
+    <h3>Hasil</h3>
+    <?php if ($statisticsResult !== null): ?>
+    <?php foreach ($statisticsResult as $key => $value): ?>
+    <p><strong><?= htmlspecialchars($key) ?>:</strong>
+        <?= htmlspecialchars(is_array($value) ? implode(', ', $value) : $value) ?></p>
+    <?php endforeach; ?>
     <?php else: ?>
-    <p>Tidak ada data untuk statistik.</p>
+    <p>Belum ada hasil yang ditampilkan.</p>
     <?php endif; ?>
 
 </body>
