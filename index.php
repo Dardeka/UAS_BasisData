@@ -103,45 +103,48 @@ if (isset($_POST['action'])) {
 
 <head>
     <title>Data UKT Mahasiswa</title>
-    <style>
-    table {
-        border-collapse: collapse;
-        width: 100%;
-    }
-
-    td,
-    th {
-        border: 1px solid #ddd;
-        padding: 8px;
-    }
-
-    tr:nth-child(even) {
-        background-color: #f2f2f2;
-    }
-
-    button,
-    input {
-        margin: 5px 0;
-    }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <div class="inputResult">
+        <div class="forms">
+            <h2>Data UKT Mahasiswa</h2>
+            <form method="POST">
+                <label>Nama:</label><br>
+                <input type="text" name="nama" required><br>
+                <label>NIM:</label><br>
+                <input type="text" name="nim" required><br>
+                <label>Alamat:</label><br>
+                <input type="text" name="alamat" required><br>
+                <label>Prodi:</label><br>
+                <input type="text" name="prodi" required><br>
+                <label>UKT:</label><br>
+                <input type="number" name="ukt" step="0.01" required><br>
+                <button type="submit" class="addData">Tambah Data</button>
+            </form>
+        </div>
+        <div class="result">
+            <h3>Operasi Statistik</h3>
+            <form method="POST" class="operator">
+                <button type="submit" name="action" value="statistics">Tampilkan Statistik 5 Serangkai</button>
+                <button type="submit" name="action" value="outliers">Tampilkan Data Pencilan</button>
+                <button type="submit" name="action" value="stdDev">Tampilkan Standar Deviasi</button>
+            </form>
+        
+            <h3>Hasil</h3>
+            <?php if ($statisticsResult !== null): ?>
+            <?php foreach ($statisticsResult as $key => $value): ?>
+            <p><strong><?= htmlspecialchars($key) ?>:</strong>
+                <?= htmlspecialchars(is_array($value) ? implode(', ', $value) : $value) ?></p>
+            <?php endforeach; ?>
+            <?php else: ?>
+            <p>Belum ada hasil yang ditampilkan.</p>
+            <?php endif; ?>
+        </div>
+    </div>
 
-    <h2>Data UKT Mahasiswa</h2>
-    <form method="POST">
-        <label>Nama:</label><br>
-        <input type="text" name="nama" required><br>
-        <label>NIM:</label><br>
-        <input type="text" name="nim" required><br>
-        <label>Alamat:</label><br>
-        <input type="text" name="alamat" required><br>
-        <label>Prodi:</label><br>
-        <input type="text" name="prodi" required><br>
-        <label>UKT:</label><br>
-        <input type="number" name="ukt" step="0.01" required><br>
-        <button type="submit">Tambah Data</button>
-    </form>
+
 
     <table>
         <thead>
@@ -167,24 +170,6 @@ if (isset($_POST['action'])) {
             <?php endwhile; ?>
         </tbody>
     </table>
-
-    <h3>Operasi Statistik</h3>
-    <form method="POST">
-        <button type="submit" name="action" value="statistics">Tampilkan Statistik 5 Serangkai</button>
-        <button type="submit" name="action" value="outliers">Tampilkan Data Pencilan</button>
-        <button type="submit" name="action" value="stdDev">Tampilkan Standar Deviasi</button>
-    </form>
-
-    <h3>Hasil</h3>
-    <?php if ($statisticsResult !== null): ?>
-    <?php foreach ($statisticsResult as $key => $value): ?>
-    <p><strong><?= htmlspecialchars($key) ?>:</strong>
-        <?= htmlspecialchars(is_array($value) ? implode(', ', $value) : $value) ?></p>
-    <?php endforeach; ?>
-    <?php else: ?>
-    <p>Belum ada hasil yang ditampilkan.</p>
-    <?php endif; ?>
-
 </body>
 
 </html>

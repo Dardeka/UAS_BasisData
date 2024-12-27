@@ -1,0 +1,89 @@
+*{
+    background-color: #ECECEC;
+}
+
+.inputResult{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 20px;
+    margin: 30px;
+    border: 1px solid #F4D03F;
+    border-radius: 15px;
+    background-color: #FCF3CF;
+    box-shadow: 0px 0px 5px 5px rgba(133, 128, 128, 0.5);
+}
+
+.forms, .result, h2, h3, form, label, p {
+    background-color: #FCF3CF;
+}
+
+label{
+    font-style: italic;
+}
+
+input{
+    padding: 5px;
+    border-radius: 5px;
+    /* outline: none; */
+    border: 1px solid rgba(0, 0, 0,0.5);
+}
+
+.forms button{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    margin-right: auto;
+    margin-left: auto;
+    border: 1px solid black;
+    border-radius: 30px;
+    background-color: #A93226;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.forms button:hover{
+    background-color: #922B21;
+}
+
+.addData{
+    padding: 10px;
+}
+
+.operator button{
+    padding: 10px 20px;
+    border: 1px solid #4D5656;
+    border-radius: 5px;
+    background-color: #D4AC0D;
+    color: #2C2C2C;
+    cursor: pointer;
+}
+
+.operator button:hover{
+    background-color: #F4D03F;
+}
+
+table {
+    border-collapse: collapse;
+    width: 90%;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+td,
+th {
+    border: 1px solid #000;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+button,
+input {
+    margin: 5px 0;
+    width: 250px;
+}
