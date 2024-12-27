@@ -1,9 +1,8 @@
 <?php
 require 'DatabaseHelper.php';
 
-$db = new DatabaseHelper();
+$conn = getDatabaseConnection();
 
-// Fungsi untuk menghitung median
 function calculateMedian($data) {
     $count = count($data);
     if ($count === 0) return 0;
@@ -18,10 +17,7 @@ function calculateMedian($data) {
     }
 }
 
-// Fungsi untuk menghitung statistik 5 serangkai
 function getStatistics($data) {
-    if (empty($data)) return null;
-
     sort($data);
     $min = $data[0];
     $max = $data[count($data) - 1];
@@ -38,16 +34,13 @@ function getStatistics($data) {
     ];
 }
 
-// Fungsi untuk menghitung pencilan
 function getOutliers($data) {
-    if (empty($data)) return null;
-
     $stats = getStatistics($data);
     $iqr = $stats['Q3 (Kuartil 3)'] - $stats['Q1 (Kuartil 1)'];
     $lowerBound = $stats['Q1 (Kuartil 1)'] - 1.5 * $iqr;
     $upperBound = $stats['Q3 (Kuartil 3)'] + 1.5 * $iqr;
 
-    $outliers = array_filter($data, function($value) use ($lowerBound, $upperBound) {
+    $outliers = array_filter($data, function ($value) use ($lowerBound, $upperBound) {
         return $value < $lowerBound || $value > $upperBound;
     });
 
@@ -58,32 +51,33 @@ function getOutliers($data) {
     ];
 }
 
-// Fungsi untuk menghitung standar deviasi
 function getStandardDeviation($data) {
     if (empty($data)) return 0;
 
     $mean = array_sum($data) / count($data);
-    $variance = array_sum(array_map(function($value) use ($mean) {
+    $variance = array_sum(array_map(function ($value) use ($mean) {
         return pow($value - $mean, 2);
     }, $data)) / count($data);
 
     return sqrt($variance);
 }
 
-// Tambahkan data ke database
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nama'], $_POST['nim'], $_POST['alamat'], $_POST['prodi'], $_POST['ukt'])) {
-    $sql = "INSERT INTO mahasiswa (nama, nim, alamat, prodi, ukt) VALUES (?, ?, ?, ?, ?)";
-    $db->execute($sql, [$_POST['nama'], $_POST['nim'], $_POST['alamat'], $_POST['prodi'], $_POST['ukt']]);
+    $nama = $conn->real_escape_string($_POST['nama']);
+    $nim = $conn->real_escape_string($_POST['nim']);
+    $alamat = $conn->real_escape_string($_POST['alamat']);
+    $prodi = $conn->real_escape_string($_POST['prodi']);
+    $ukt = (float)$_POST['ukt'];
+
+    $conn->query("INSERT INTO mahasiswa (nama, nim, alamat, prodi, ukt) VALUES ('$nama', '$nim', '$alamat', '$prodi', $ukt)");
 }
 
-// Ambil data UKT
-$result = $db->query("SELECT ukt FROM mahasiswa");
+$result = $conn->query("SELECT ukt FROM mahasiswa");
 $uktValues = [];
 while ($row = $result->fetch_assoc()) {
     $uktValues[] = $row['ukt'];
 }
 
-// Variabel untuk hasil statistik
 $statisticsResult = null;
 if (isset($_POST['action'])) {
     if ($_POST['action'] === 'statistics') {
@@ -158,7 +152,7 @@ if (isset($_POST['action'])) {
         </thead>
         <tbody>
             <?php
-        $result = $db->query("SELECT * FROM mahasiswa");
+        $result = $conn->query("SELECT * FROM mahasiswa");
         while ($row = $result->fetch_assoc()): ?>
             <tr>
                 <td><?= htmlspecialchars($row['nama']) ?></td>
