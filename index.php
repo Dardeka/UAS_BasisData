@@ -53,7 +53,7 @@ function getOutliers($data)
         }, $outliers)),
         'Batas Bawah' => $lowerBound,
         'Batas Atas' => $upperBound,
-        'Data Pencilan' => empty($outliers) ? 'Tidak ada pencilan' : $formattedOutliers,
+        'Data Pencilan' => empty($outliers) ? 'Tidak ada pencilan' : $formattedOutliers, // implode(', ', $outliers)
     ];
 }
 
