@@ -48,9 +48,12 @@ function getOutliers($data)
     });
 
     return [
+        $formattedOutliers = implode(', ', array_map(function($value) {
+            return number_format($value, 0, ',', '.'); // Format with 2 decimal places
+        }, $outliers)),
         'Batas Bawah' => $lowerBound,
         'Batas Atas' => $upperBound,
-        'Data Pencilan' => empty($outliers) ? 'Tidak ada pencilan' : implode(', ', $outliers),
+        'Data Pencilan' => empty($outliers) ? 'Tidak ada pencilan' : $formattedOutliers,
     ];
 }
 
