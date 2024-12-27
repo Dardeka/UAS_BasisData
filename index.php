@@ -3,7 +3,8 @@ require 'DatabaseHelper.php';
 
 $conn = getDatabaseConnection();
 
-function calculateMedian($data) {
+function calculateMedian($data)
+{
     $count = count($data);
     if ($count === 0) return 0;
 
@@ -17,13 +18,14 @@ function calculateMedian($data) {
     }
 }
 
-function getStatistics($data) {
+function getStatistics($data)
+{
     sort($data);
-    $min = $data[0];
-    $max = $data[count($data) - 1];
-    $median = calculateMedian($data);
-    $q1 = calculateMedian(array_slice($data, 0, floor(count($data) / 2)));
-    $q3 = calculateMedian(array_slice($data, ceil(count($data) / 2)));
+    $min = number_format($data[0], 0, ',', '.');
+    $max = number_format($data[count($data) - 1], 0, ',', '.');
+    $median = number_format(calculateMedian($data), 0, ',', '.');
+    $q1 = number_format(calculateMedian(array_slice($data, 0, floor(count($data) / 2))), 0, ',', '.');
+    $q3 = number_format(calculateMedian(array_slice($data, ceil(count($data) / 2))), 0, ',', '.');
 
     return [
         'Min' => $min,
@@ -34,7 +36,8 @@ function getStatistics($data) {
     ];
 }
 
-function getOutliers($data) {
+function getOutliers($data)
+{
     $stats = getStatistics($data);
     $iqr = $stats['Q3 (Kuartil 3)'] - $stats['Q1 (Kuartil 1)'];
     $lowerBound = $stats['Q1 (Kuartil 1)'] - 1.5 * $iqr;
@@ -51,7 +54,8 @@ function getOutliers($data) {
     ];
 }
 
-function getStandardDeviation($data) {
+function getStandardDeviation($data)
+{
     if (empty($data)) return 0;
 
     $mean = array_sum($data) / count($data);
@@ -125,15 +129,15 @@ if (isset($_POST['action'])) {
                 <button type="submit" name="action" value="outliers">Tampilkan Data Pencilan</button>
                 <button type="submit" name="action" value="stdDev">Tampilkan Standar Deviasi</button>
             </form>
-        
+
             <h3>Hasil</h3>
             <?php if ($statisticsResult !== null): ?>
-            <?php foreach ($statisticsResult as $key => $value): ?>
-            <p><strong><?= htmlspecialchars($key) ?>:</strong>
-                <?= htmlspecialchars(is_array($value) ? implode(', ', $value) : $value) ?></p>
-            <?php endforeach; ?>
+                <?php foreach ($statisticsResult as $key => $value): ?>
+                    <p><strong><?= htmlspecialchars($key) ?>:</strong>
+                        <?= htmlspecialchars(is_array($value) ? implode(', ', $value) : $value) ?></p>
+                <?php endforeach; ?>
             <?php else: ?>
-            <p>Belum ada hasil yang ditampilkan.</p>
+                <p>Belum ada hasil yang ditampilkan.</p>
             <?php endif; ?>
         </div>
     </div>
@@ -152,15 +156,15 @@ if (isset($_POST['action'])) {
         </thead>
         <tbody>
             <?php
-        $result = $conn->query("SELECT * FROM mahasiswa");
-        while ($row = $result->fetch_assoc()): ?>
-            <tr>
-                <td><?= htmlspecialchars($row['nama']) ?></td>
-                <td><?= htmlspecialchars($row['nim']) ?></td>
-                <td><?= htmlspecialchars($row['alamat']) ?></td>
-                <td><?= htmlspecialchars($row['prodi']) ?></td>
-                <td><?= number_format($row['ukt'], 0, ',', '.') ?></td>
-            </tr>
+            $result = $conn->query("SELECT * FROM mahasiswa");
+            while ($row = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><?= htmlspecialchars($row['nama']) ?></td>
+                    <td><?= htmlspecialchars($row['nim']) ?></td>
+                    <td><?= htmlspecialchars($row['alamat']) ?></td>
+                    <td><?= htmlspecialchars($row['prodi']) ?></td>
+                    <td>Rp <?= number_format($row['ukt'], 0, ',', '.') ?></td>
+                </tr>
             <?php endwhile; ?>
         </tbody>
     </table>
